@@ -1,6 +1,6 @@
 First time
 Trying...
-Second time Somebody is seeing you
+Second time Somebody are seeing you
 Trying...
 Third time
 Forth time
