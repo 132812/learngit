@@ -1,0 +1,134 @@
+Git跟踪并管理的是修改，并不是文件
+1.在更改文件夹的时候 head文件和master文件并没有更改
+2.在git add文件的时候 head文件更改了 master并没有
+3.在git commit时候 master文件也更改了
+git add是把要提交文件的所有修改放到了暂存区（head指向了master）
+git commit是把所有的修改提交到当前分支master里
+
+跟踪修改
+1.先是进行了一次修改文件 然后git add文件 再修改同一个文件
+再之后提交 git commit
+2.查看状态会发现第二次修改没被提交
+原来第二次提交没有将文件的修改放到暂存区 之后的提交是把暂存区也就是第一次修改提交到分支中	
+怎么做：可以在做一次git add和git commit或者做两次git add和最后一次git commit
+每次修改，如果不add到暂存区，那就不会加入到commit中。
+
+撤销修改
+1.git checkout --file 将file文件在工作区的修改全部撤销
+这里有两种情况：
+一种是readme.txt自修改后还没有被放到暂存区，现在，撤销修改就回到和版本库一模一样的状态；
+一种是readme.txt已经添加到暂存区后，又作了修改，现在，撤销修改就回到添加到暂存区后的状态。
+2.这时候如果已经add了，用git reset HEAD file将暂存区的文件撤销放回到工作区中，然后用git check撤销修改
+3.如果已经提交到了版本库了，可以用版本回退回到上次修改时候
+场景1：当你改乱了工作区某个文件的内容，想直接丢弃工作区的修改时，用命令git checkout -- file。
+场景2：当你不但改乱了工作区某个文件的内容，还添加到了暂存区时，想丢弃修改，分两步，第一步用命令git reset HEAD file，就回到了场景1，第二步按场景1操作。
+场景3：已经提交了不合适的修改到版本库时，想要撤销本次提交，参考版本回退一节，不过前提是没有推送到远程库
+
+版本回退
+1.HEAD指向的版本是当前版本，要回退到某个版本时，使用git reset --hard HEAD^\HEAD~items或者git reset --hard commit_id
+2.回退时，可以用git log查看提交历史以及commit_id
+3.返回未来时，用git reflog查看命令历史，以确定要回到回来的某个版本
+
+删除修改
+1.rm file用于删除一个在工作区中的文件
+1.git rm用于删除一个文件，如果该文件被提交到版本库中，用git rm删除
+并用git commit 提交
+2.如果删错了 用Git checkout --file将误删的文件从版本库中提取出来放到工作区中
+
+
+远程仓库
+1.设置自己本地的SSH.key，先查看本地是否拥有sshkey cd ~/.ssh
+2.没有的话，创建SSH.key ssh-keygen -t rsa -C "youremail@example.com"
+3.在用户主目录下找到.ssh 里面有两个文件夹 id_rsa和id_rsa.pub 前者是私钥 后者是公钥
+4.登陆github 创建SSH key 将id_rsa.pub中的内容复制过去即可
+
+
+添加到远程仓库
+1.在github上创建repository repository name 和本地库的名字一样
+2.在本地的某个要远程传送过去的仓库中
+git remote add origin git@github.com:132812/learngit.git
+132812为自己在github上的账号 
+后者为仓库名字
+由此 关联到远程库
+3.git push -u origin master第一次推送master分支的所有内容
+4.git push origin master 以后推送最新修改内容
+
+远程仓库克隆
+1.$ git clone git@github.com:michaelliao/gitskills.git
+
+使用分支
+1.创建分支 git branch <name>
+2.切换分支 git checkout <name>
+3.查看分支 git branch
+4.创建+切换分支 git checkout -b <name>
+5.合并某分支到当前分支 git merge <name>
+6.删除分支 git branch -d <name>
+切换到别的分支后，工作照常进行，并不会影响另一分支的文件，注意要最后提交你修改的文件哦
+
+合并分支
+1.git merge
+2.git log --graph查看分支合并图
+$ git log --graph --pretty=oneline --abbrev-commit
+
+分支管理 
+1.git merge --no-ff-m"message"dev
+加上--no-ff后 可以用普通模式合并 ，合并后的历史有分支，能看出来曾经做过合并，而fast forward合并就看不出来曾经做过合并
+
+bug分支
+1.出现bug时，要修复bug分支，而现在的工作正在进行提交不了，可以用stash功能将当前工作现场隐藏起来
+git stash
+2.返回master分支 在master分支上创建bug分支，在bug分支上对bug进行修复然后提交，回到master分支，合并两者，然后删除bug分支
+3.bug修复后，要回到刚才的工作现场
+可以1）使用 git stash apply 恢复，恢复后stash的内容不删除，需要用git stash drop
+或者2）用git stash pop恢复并删除stash
+4.可以用git stash list来查看stash中内容
+或者多次使用stash 可以用git stash apply stash@{index}
+小结：当手头工作没有完成时，先把工作现场git stash一下，然后去修复bug，修复后，再git stash pop，回到工作现场。
+
+强行删除feature分支
+1.git branch -D <name>
+
+多人合作
+多人协作的工作模式通常是这样：
+
+首先，可以试图用git push origin branch-name推送自己的修改；
+
+如果推送失败，则因为远程分支比你的本地更新，需要先用git pull试图合并；
+
+如果合并有冲突，则解决冲突，并在本地提交；
+
+没有冲突或者解决掉冲突后，再用git push origin branch-name推送就能成功！
+
+如果git pull提示“no tracking information”，则说明本地分支和远程分支的链接关系没有创建，用命令git branch --set-upstream branch-name origin/branch-name。
+
+这就是多人协作的工作模式，一旦熟悉了，就非常简单。
+
+小结
+
+查看远程库信息，使用git remote -v；
+
+本地新建的分支如果不推送到远程，对其他人就是不可见的；
+
+从本地推送分支，使用git push origin branch-name，如果推送失败，先用git pull抓取远程的新提交；
+
+在本地创建和远程分支对应的分支，使用git checkout -b branch-name origin/branch-name，本地和远程分支的名称最好一致；
+
+建立本地分支和远程分支的关联，使用git branch --set-upstream branch-name origin/branch-name；
+
+从远程抓取分支，使用git pull，如果有冲突，要先处理冲突。
+
+标签
+1.用git tag<name> commit_id在id上新建一个标签
+2.用git tag -a<tagname> -m"message" commit_id 
+-a为指定标签名 -m为说明
+3.用git tag -s<tagname> -m"message" 用PGP前面标签
+4.用git tag查看所有标签
+5.git show <tagname>可以查看标签指向的信息
+
+
+修改标签
+1.git tag -d <tagname>删除标签名字
+2.推送某个标签到远程 git push origin <tagname>
+3.一次性推送所有尚未推送到远程的本地标签
+git push origin -tags
+4.删除远地标签 git push origin : refs/tags/<tagname> 
